@@ -1,7 +1,14 @@
 # Marine
 
+## Reference
 
-## Dati
+[G. Raiteri, A. Bordonea, T. Ciuffardi, F. Pennecchi, Uncertainty evaluation of CTD measurements: a metrological approach to water-column coastal parameters in the Gulf of La Spezia area](https://github.com/Multifaceted/Marine/blob/main/paper/Uncertainty%20evaluation%20of%20CTD%20measurements%20a%20metrological%20approach%20to.pdf)
+
+[Andrea Bordone, Tiziana Ciuffardi, Giancarlo Raiteri, Antonio Schirone, Roberto Bozzano,
+Sara Pensieri, Francesca Pennecchi, Paola Picco, Improved Current Estimates from Spar Buoy-Mounted ADCP
+Measurement Station: A Case Study in the Ligurian Sea](https://github.com/Multifaceted/Marine/blob/main/paper/Improved%20Current%20Estimates%20from%20Spar%20Buoy-Mounted%20ADCP.pdf)
+
+## Data
 Nella cartella zippata, trovi:
 
 - la mappa complessiva della dislocazione dei nodi di misura, dove 

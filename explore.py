@@ -107,7 +107,50 @@ Winkler_raw_df.describe()
 
 ################### Join ###################
 CTD_raw_df.columns = map(lambda x: x+"_CTD", CTD_raw_df.columns)
-Winkler_raw_df.columns = map(lambda x: x+"_CTD", CTD_raw_df.columns)
-joint_df = (CTD_raw_df.merge(Conducibilita_raw_df, how="left", left_on="Data_CTD", right_on="Data", suffixes=('', '_Conducibilita')).groupby("Data_CTD").mean().reset_index()
-           .merge(Ossigeno_raw_df, how="left", left_on="Data_CTD", right_on="Data", suffixes=('', '_Conducibilita')).groupby("Data_CTD").mean().reset_index()
-           .merge(Winkler_raw_df, how="left", left_on="Data_CTD", right_on="Data", suffixes=('', '_Winkler'))).groupby("Data_CTD").mean()
+Winkler_raw_df.columns = map(lambda x: x+"_Winkler", Winkler_raw_df.columns)
+Ossigeno_raw_df.columns = map(lambda x: x+"_Ossigeno", Ossigeno_raw_df.columns)
+Conducibilita_raw_df.columns = map(lambda x: x+"_Conducibilita", Conducibilita_raw_df.columns)
+
+joint_df = (CTD_raw_df.merge(Conducibilita_raw_df, how="left", left_on="Data_CTD", right_on="Data_Conducibilita").groupby("Data_CTD").mean().reset_index()
+           .merge(Ossigeno_raw_df, how="left", left_on="Data_CTD", right_on="Data_Ossigeno").groupby("Data_CTD").mean().reset_index()
+           .merge(Winkler_raw_df, how="left", left_on="Data_CTD", right_on="Data_Winkler").groupby("Data_CTD").mean())
+
+
+import plotly.plotly as py
+import plotly.figure_factory as ff
+
+from plotly.figure_factory import create_gantt
+
+plt.figure(figsize=(15,8))
+sns.countplot(CTD_raw_df["Data_CTD"])
+plt.xticks(rotation=90)
+
+sns.scatterplot(CTD_raw_df["Data_CTD"].value_counts().index, CTD_raw_df["Data_CTD"].value_counts()).set(title="CTD Sample Rate", xlabel="date", ylabel= "sample_counts")
+
+
+plt.figure(figsize=(15,8))
+sns.countplot(Winkler_raw_df["Data_Winkler"])
+plt.xticks(rotation=90)
+
+sns.scatterplot(Winkler_raw_df["Data_Winkler"].value_counts().index, Winkler_raw_df["Data_Winkler"].value_counts()).set(xlabel="date", ylabel= "sample_counts")
+
+
+plt.figure(figsize=(50,30))
+sns.countplot(Ossigeno_raw_df["Data_Ossigeno"])
+plt.xticks(rotation=90)
+
+sns.scatterplot(Ossigeno_raw_df["Data_Ossigeno"].value_counts().index, Ossigeno_raw_df["Data_Ossigeno"].value_counts()).set(xlabel="date", ylabel= "sample_counts")
+
+
+plt.figure(figsize=(50,30))
+sns.countplot(Conducibilita_raw_df["Data_Conducibilita"])
+plt.xticks(rotation=90)
+
+sns.scatterplot(Conducibilita_raw_df["Data_Conducibilita"].value_counts().index, Conducibilita_raw_df["Data_Conducibilita"].value_counts()).set(xlabel="date", ylabel= "sample_counts")
+
+df = [dict(Task="CTD", Start=CTD_raw_df["Data_CTD"].min().strftime(format="%Y-%m-%d"), Finish=CTD_raw_df["Data_CTD"].max().strftime(format="%Y-%m-%d")),
+      dict(Task="Winkler", Start=Winkler_raw_df["Data_Winkler"].min().strftime(format="%Y-%m-%d"), Finish=Winkler_raw_df["Data_Winkler"].max().strftime(format="%Y-%m-%d")),
+      dict(Task="Ossigeno", Start=Ossigeno_raw_df["Data_Ossigeno"].min().strftime(format="%Y-%m-%d"), Finish=Ossigeno_raw_df["Data_Ossigeno"].max().strftime(format="%Y-%m-%d")),
+      dict(Task="Conducibilita", Start=Conducibilita_raw_df["Data_Conducibilita"].min().strftime(format="%Y-%m-%d"), Finish=Conducibilita_raw_df["Data_Conducibilita"].max().strftime(format="%Y-%m-%d"))]
+fig = create_gantt(df)
+fig.show()

@@ -106,4 +106,8 @@ Winkler_raw_df.info()
 Winkler_raw_df.describe()
 
 ################### Join ###################
-CTD_raw_df.merge(Conducibilita_raw_df, )
+CTD_raw_df.columns = map(lambda x: x+"_CTD", CTD_raw_df.columns)
+Winkler_raw_df.columns = map(lambda x: x+"_CTD", CTD_raw_df.columns)
+joint_df = (CTD_raw_df.merge(Conducibilita_raw_df, how="left", left_on="Data_CTD", right_on="Data", suffixes=('', '_Conducibilita')).groupby("Data_CTD").mean().reset_index()
+           .merge(Ossigeno_raw_df, how="left", left_on="Data_CTD", right_on="Data", suffixes=('', '_Conducibilita')).groupby("Data_CTD").mean().reset_index()
+           .merge(Winkler_raw_df, how="left", left_on="Data_CTD", right_on="Data", suffixes=('', '_Winkler'))).groupby("Data_CTD").mean()

@@ -111,10 +111,27 @@ Winkler_raw_df.columns = map(lambda x: x+"_Winkler", Winkler_raw_df.columns)
 Ossigeno_raw_df.columns = map(lambda x: x+"_Ossigeno", Ossigeno_raw_df.columns)
 Conducibilita_raw_df.columns = map(lambda x: x+"_Conducibilita", Conducibilita_raw_df.columns)
 
-joint_df = (CTD_raw_df.merge(Conducibilita_raw_df, how="left", left_on="Data_CTD", right_on="Data_Conducibilita").groupby("Data_CTD").mean().reset_index()
+joint_avg_df = (CTD_raw_df.merge(Conducibilita_raw_df, how="left", left_on="Data_CTD", right_on="Data_Conducibilita").groupby("Data_CTD").mean().reset_index()
            .merge(Ossigeno_raw_df, how="left", left_on="Data_CTD", right_on="Data_Ossigeno").groupby("Data_CTD").mean().reset_index()
            .merge(Winkler_raw_df, how="left", left_on="Data_CTD", right_on="Data_Winkler").groupby("Data_CTD").mean())
 
+def merge_minDiff(CTD_raw_df, incoming):
+    incoming_df = eval(incoming+"_raw_df")
+    temp_df = CTD_raw_df.merge(incoming_df, how="left", left_on="Data_CTD", right_on="Data_" + incoming)
+    temp_df["Time_diff"] = (temp_df["Time_CTD"] - temp_df["Time_" + incoming]).abs()
+    temp2_df = temp_df.groupby("Data_CTD")["Time_diff"].min().reset_index()
+    temp3_df = temp_df.merge(temp2_df, how="right", on=["Data_CTD", "Time_diff"])
+
+    return temp3_df
+    
+incomings_ls = ["Conducibilita", "Ossigeno", "Winkler"]
+joint_min_df = CTD_raw_df
+
+for incoming in incomings_ls:
+    joint_min_df = merge_minDiff(joint_min_df, incoming)
+
+
+################### Plot ###################
 
 import plotly.plotly as py
 import plotly.figure_factory as ff
@@ -132,14 +149,14 @@ plt.figure(figsize=(15,8))
 sns.countplot(Winkler_raw_df["Data_Winkler"])
 plt.xticks(rotation=90)
 
-sns.scatterplot(Winkler_raw_df["Data_Winkler"].value_counts().index, Winkler_raw_df["Data_Winkler"].value_counts()).set(xlabel="date", ylabel= "sample_counts")
+sns.scatterplot(Winkler_raw_df["Data_Winkler"].value_counts().index, Winkler_raw_df["Data_Winkler"].value_counts()).set(title="Winkler Sample Rate", xlabel="date", ylabel= "sample_counts")
 
 
 plt.figure(figsize=(50,30))
 sns.countplot(Ossigeno_raw_df["Data_Ossigeno"])
 plt.xticks(rotation=90)
 
-sns.scatterplot(Ossigeno_raw_df["Data_Ossigeno"].value_counts().index, Ossigeno_raw_df["Data_Ossigeno"].value_counts()).set(xlabel="date", ylabel= "sample_counts")
+sns.scatterplot(Ossigeno_raw_df["Data_Ossigeno"].value_counts().index, Ossigeno_raw_df["Data_Ossigeno"].value_counts()).set(title="Ossigeno Sample Rate", xlabel="date", ylabel= "sample_counts")
 
 
 plt.figure(figsize=(50,30))
@@ -154,3 +171,10 @@ df = [dict(Task="CTD", Start=CTD_raw_df["Data_CTD"].min().strftime(format="%Y-%m
       dict(Task="Conducibilita", Start=Conducibilita_raw_df["Data_Conducibilita"].min().strftime(format="%Y-%m-%d"), Finish=Conducibilita_raw_df["Data_Conducibilita"].max().strftime(format="%Y-%m-%d"))]
 fig = create_gantt(df)
 fig.show()
+
+np.sort(joint_avg_df.columns)
+
+compare_ls = []
+sns.lineplot(joint_avg_df.index, joint_avg_df["Conducibilita'(mS/cm)_CTD"] - joint_avg_df["Conducibilita'(mS/cm)_Conducibilita"]).set(ylabel="Diff Conducibilita", title="CTD - Conducibilita by average")
+
+sns.lineplot(joint_avg_df.index, joint_avg_df["Conducibilita'(mS/cm)_CTD"] - joint_avg_df["Conducibilita'(mS/cm)_Conducibilita"]).set(ylabel="Diff Conducibilita", title="CTD - Conducibilita by average")

@@ -152,3 +152,23 @@ res_2_scale = np.mean([_.stddev() for _ in res_2]) # 0.695651 = 1e-3 + tf.math.s
 res_2_loc_std = np.std([_.mean() for _ in res_2]) # 12.206555615733702= np.sqrt((5 * 2)**2 + 7**2)
 res_2_scale_std =  np.std([_.stddev() for _ in res_2]) 
 # 0.0771139 = np.std([1e-3 + tf.math.softplus(0.01 * np.random.normal(loc=0, scale=np.sqrt(12**2 + 8 ** 2))) for _ in range(1000)])
+
+################################ deterministic ##########################################################
+
+model = tf.keras.Sequential([
+  tf.keras.layers.Input(shape=(2, )),
+    
+  tf.keras.layers.Dense(2,  kernel_initializer=tf.keras.initializers.Constant([5, 6, 1, 2]), bias_initializer=tf.keras.initializers.Constant([7, 8])),
+  tfp.layers.DistributionLambda(
+      lambda t: tfd.Normal(loc=t[..., :1],
+                           scale=1e-3 + tf.math.softplus(0.01 * t[...,1:]))),
+])
+
+model(tf.constant([[1, 0]])).mean() # 12 = 5 + 7
+model(tf.constant([[0, 1]])).mean() # 12 = 5 + 7
+model(tf.constant([[1, 0]])).stddev() # 0.7665952 = 1e-3 + tf.math.softplus(0.01 * (6 + 8))
+model(tf.constant([[0, 1]])).stddev() # 0.7453967 = 1e-3 + tf.math.softplus(0.01 * (2 + 8))
+
+model.weights[-2].numpy().reshape(-1, )
+
+np.concatenate([model.weights[-2].numpy().reshape(-1, ), model.weights[-1].numpy().reshape(-1, )], axis=0)

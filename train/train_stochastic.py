@@ -21,14 +21,15 @@ seed = 42
 CTD_Ossigeno_Conducibilita_df = data_piepline(method=method, data_path="../data", resample=False, order=order)
 
 
-shape = CTD_Ossigeno_Conducibilita_df.shape[0]
+shape, n_vars = CTD_Ossigeno_Conducibilita_df.shape
 
 negloglik = lambda y, rv_y: -rv_y.log_prob(y)
 
 posterior_mean_field = partial(posterior_mean_field_with_initializer, initializer="zero")
 prior_trainable = partial(prior_trainable_with_initializer, initializer="zero")
 
-model_MF = init_model_stochastic(n_inputs=CTD_Ossigeno_Conducibilita_df.shape[1]-2, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./shape)
+###################################################################################################################
+model_MF = init_model_stochastic(n_inputs=n_vars-2, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./shape)
 model_MF.compile(optimizer=tf.optimizers.Adam(learning_rate=0.01), loss=negloglik)
 tf.keras.utils.set_random_seed(seed)
 history = model_MF.fit(CTD_Ossigeno_Conducibilita_df[["Temperatura(°C)_CTD", "Temperatura(°C)_Conducibilita", "Temperatura(°C)_Ossigeno", "Pressione(db)_CTD", "Pressione(db)_Conducibilita", "Pressione(db)_Ossigeno", "Ossigeno(mg/l)_CTD"]], CTD_Ossigeno_Conducibilita_df[["Ossigeno(mg/l)_Ossigeno"]], batch_size=shape, epochs=3000)

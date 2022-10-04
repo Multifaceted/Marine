@@ -5,6 +5,7 @@ from util.prior_posterior import  posterior_mean_field, prior_trainable
 from util.plot import plot_average
 import tensorflow as tf
 
+
 method = "polynomial"
 order = 5
 

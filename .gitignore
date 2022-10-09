@@ -4,3 +4,4 @@ data/
 checkpoints/*
 saved_model/*
 train/checkpoints/*
+history/*

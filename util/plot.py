@@ -26,16 +26,16 @@ prior_trainable = partial(prior_trainable_with_initializer, initializer="zero")
 
 model_MF = init_model_stochastic(n_inputs=7, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./2)
 
-model_MF.load_weights("/home/3068020/Marine/checkpoints/stochastic_initialized_seed24_delta1")
+model_MF.load_weights("/home/3068020/Marine/checkpoints/stochastic_initialized_seed24_48_delta1_slinear")
 
 m, s = plot_average(model_MF, CTD_Ossigeno_Conducibilita_df, 10)
 np.mean((CTD_Ossigeno_Conducibilita_df["Ossigeno(mg/l)_Ossigeno"] - m) ** 2)
 
 model = init_model_stochastic(n_inputs=7, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./2)
 
-model.load_weights("/home/3068020/Marine/checkpoints/stochastic_seed24")
+model.load_weights("/home/3068020/Marine/checkpoints/stochastic_seed48_slinear")
 
-m, s = plot_average(model_MF, CTD_Ossigeno_Conducibilita_df, 10)
+m, s = plot_average(model, CTD_Ossigeno_Conducibilita_df, 10)
 np.mean((CTD_Ossigeno_Conducibilita_df["Ossigeno(mg/l)_Ossigeno"] - m) ** 2)
 
 

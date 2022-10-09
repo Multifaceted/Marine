@@ -5,3 +5,5 @@ checkpoints/*
 saved_model/*
 train/checkpoints/*
 history/*
+*.png
+*.ipynb

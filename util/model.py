@@ -5,14 +5,7 @@ tfd = tfp.distributions
 def init_model_stochastic(n_inputs, posterior, prior, kl_weight):
     """
     Measure both epistemic uncertainty and aleatoric uncertainty.
-    The number of parameters in the last-but-one weight layer is equal to 32 (previous neurons) * 2 (mean + stddev) + 2 (bias)
-    
-    TODO verify that the order of the parameters is (Neruon 1 weight for param_mean for loc, Neuron 1 weight for param_loc for scale...,
-                                                     Neuron 2 weight ... 
-                                                     mean Bias for loc, Bias for scale,
-                                                     Neuron 1 weight for param_stddev for loc, Neuron 1 weight for param_stddev for scale...,
-                                                     Neuron 2 weight ...
-                                                     stddev Bias for loc, stddev Bias for scale)
+    The number of parameters in the last-but-one weight layer is equal to 32 (previous neurons) * 2 (mean + stddev) + 2 (bias)E
     """
     model = tf.keras.Sequential([
     tf.keras.layers.Input(shape=(n_inputs, )),

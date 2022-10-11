@@ -24,7 +24,7 @@ negloglik = lambda y, rv_y: -rv_y.log_prob(y)
 posterior_mean_field = partial(posterior_mean_field_with_initializer, initializer="zero")
 prior_trainable = partial(prior_trainable_with_initializer, initializer="zero")
 
-path = "/home/3068020/Marine/history/stochastic_seed48_polynomial/"
+path = "/home/3068020/Marine/history/stochastic_seed24_polynomial/"
 model_MF = init_model_stochastic(n_inputs=7, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./2)
 
 model_MF.load_weights(os.path.join(path, "weights"))
@@ -32,18 +32,18 @@ model_MF.load_weights(os.path.join(path, "weights"))
 m, s, loss_avg = plot_average(model_MF, CTD_Ossigeno_Conducibilita_df, 10, "without initialization", path=path, save_fig=True)
 # np.mean((CTD_Ossigeno_Conducibilita_df["Ossigeno(mg/l)_Ossigeno"] - m) ** 2)
 
-model = init_model_stochastic(n_inputs=7, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./2)
+# model = init_model_stochastic(n_inputs=7, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./2)
 
-model = init_model_aleatoric(n_inputs=7)
+model_aleatoric = init_model_aleatoric(n_inputs=7)
 
-path2 = "/home/3068020/Marine/history/aleatoric_seed48_polynomial"
-model.load_weights(os.path.join(path2, "weights"))
+path2 = "/home/3068020/Marine/history/aleatoric_seed24_polynomial"
+model_aleatoric.load_weights(os.path.join(path2, "weights"))
 
-m, s, loss_avg = plot_average(model, CTD_Ossigeno_Conducibilita_df, 1, "only aleatoric", path=path2, save_fig=True)
-np.mean((CTD_Ossigeno_Conducibilita_df["Ossigeno(mg/l)_Ossigeno"] - m) ** 2)
+m, s, loss_avg = plot_average(model_aleatoric, CTD_Ossigeno_Conducibilita_df, 1, "only aleatoric", path=path2, save_fig=True)
+# np.mean((CTD_Ossigeno_Conducibilita_df["Ossigeno(mg/l)_Ossigeno"] - m) ** 2)
 
 
-path3 = "/home/3068020/Marine/history/stochastic_seed48_polynomial_initialized"
+path3 = "/home/3068020/Marine/history/stochastic_seed24_polynomial_initialized"
 model_MF_initialized = init_model_stochastic(n_inputs=7, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./2)
 
 model_MF_initialized.load_weights(os.path.join(path3, "weights"))

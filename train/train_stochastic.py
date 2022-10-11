@@ -17,7 +17,7 @@ import json
 
 params = {"method": "polynomial",
 "order": 5,
-"save_to": "/home/3068020/Marine/history/stochastic_seed48_slinear",
+"save_to": "/home/3068020/Marine/history/stochastic_seed48_polynomial",
 "n_epochs": 1000,
 "seed": 48}
 
@@ -32,7 +32,6 @@ with open(args.param, 'r') as f:
 method = params["method"]
 order = params["order"]
 save_to = params["save_to"]
-load_weights_from = params["load_weights_from"]
 n_epochs = params["n_epochs"]
 seed = params["seed"]
 

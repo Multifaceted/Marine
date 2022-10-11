@@ -22,8 +22,7 @@ parser.add_argument("-p", "--param", type=str, required=True)
 
 args = parser.parse_args()
 
-with open(args.param, 'r') as f:
-  params = json.load(f)
+
 
 params = {"method": "polynomial",
 "order": 5,
@@ -31,6 +30,9 @@ params = {"method": "polynomial",
 "load_weights_from": "/home/3068020/Marine/history/aleatoric_seed24_slinear",
 "n_epochs": 1000,
 "seed": 48}
+
+with open(args.param, 'r') as f:
+  params = json.load(f)
 
 method = params["method"]
 order = params["order"]
@@ -49,7 +51,7 @@ negloglik = lambda y, rv_y: -rv_y.log_prob(y)
 model_multioutput = init_model_aleatoric(n_vars-2)
 model_multioutput.load_weights(os.path.join(load_weights_from, "weights"))
 weights_initializer = np.concatenate([model_multioutput.weights[-2].numpy().reshape(-1, ), model_multioutput.weights[-1].numpy().reshape(-1, )], axis=0)
-delta = 2
+delta = .1
 stds_initializer = delta * np.abs(weights_initializer)
 
 posterior_mean_field = partial(posterior_mean_field_with_initializer, initializer=tf.keras.initializers.Constant(np.concatenate([weights_initializer, stds_initializer], axis=0)))

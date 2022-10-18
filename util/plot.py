@@ -8,23 +8,23 @@ sys.path.insert(0, parentdir)
 
 from functools import partial
 from util.model import init_model_stochastic, init_model_aleatoric
-from util.load_data import data_piepline
+from util.load_data import data_pipeline, data_pipeline_split
 from util.prior_posterior import  posterior_mean_field_with_initializer, prior_trainable_with_initializer
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
 
-method = "polynomial"
+method = "slinear"
 order = 5
 
-CTD_Ossigeno_Conducibilita_df = data_piepline(method=method, data_path="../data", resample=False, order=order)
+CTD_Ossigeno_Conducibilita_df = data_pipeline(method=method, data_path="../data", resample=False, order=order)
 
 negloglik = lambda y, rv_y: -rv_y.log_prob(y)
 
 posterior_mean_field = partial(posterior_mean_field_with_initializer, initializer="zero")
 prior_trainable = partial(prior_trainable_with_initializer, initializer="zero")
 
-path = "/home/3068020/Marine/history/stochastic_seed24_polynomial/"
+path = "/home/3068020/Marine/history/stochastic_seed48_slinear"
 model_MF = init_model_stochastic(n_inputs=7, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./2)
 
 model_MF.load_weights(os.path.join(path, "weights"))
@@ -36,14 +36,14 @@ m, s, loss_avg = plot_average(model_MF, CTD_Ossigeno_Conducibilita_df, 10, "with
 
 model_aleatoric = init_model_aleatoric(n_inputs=7)
 
-path2 = "/home/3068020/Marine/history/aleatoric_seed24_polynomial"
+path2 = "/home/3068020/Marine/history/aleatoric_seed48_slinear"
 model_aleatoric.load_weights(os.path.join(path2, "weights"))
 
 m, s, loss_avg = plot_average(model_aleatoric, CTD_Ossigeno_Conducibilita_df, 1, "only aleatoric", path=path2, save_fig=True)
 # np.mean((CTD_Ossigeno_Conducibilita_df["Ossigeno(mg/l)_Ossigeno"] - m) ** 2)
 
 
-path3 = "/home/3068020/Marine/history/stochastic_seed24_polynomial_initialized"
+path3 = "/home/3068020/Marine/history/stochastic_seed48_slinear_initialized"
 model_MF_initialized = init_model_stochastic(n_inputs=7, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./2)
 
 model_MF_initialized.load_weights(os.path.join(path3, "weights"))
@@ -74,3 +74,22 @@ def plot_average(model, df, n_predictions, description=None, save_fig=False, pat
         plt.show()
     
     return m, s, loss_avg
+
+###############################################################################
+method = "polynomial"
+order = 5
+
+CTD_Ossigeno_Conducibilita_train_df, CTD_Ossigeno_Conducibilita_test_df = data_pipeline_split(method=method, seed=0, data_path="../data", resample=False, order=order)
+
+negloglik = lambda y, rv_y: -rv_y.log_prob(y)
+
+posterior_mean_field = partial(posterior_mean_field_with_initializer, initializer="zero")
+prior_trainable = partial(prior_trainable_with_initializer, initializer="zero")
+
+path = "/home/3068020/Marine/history/stochastic_seed24_polynomial_traintest"
+model_MF = init_model_stochastic(n_inputs=7, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./2)
+
+model_MF.load_weights(os.path.join(path, "weights"))
+
+m, s, loss_avg = plot_average(model_MF, CTD_Ossigeno_Conducibilita_test_df.sort_values(by=["Time_rounded"]), 10, "without initialization", path=path, save_fig=True)
+# np.mean((CTD_Ossigeno_Conducibilita_df["Ossigeno(mg/l)_Ossigeno"] - m) ** 2)

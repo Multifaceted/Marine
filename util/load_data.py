@@ -122,8 +122,8 @@ def read_pipeline(data_path="data", resample=False, **kwargs):
     
     return Ossigeno_without_na_sub_df, Conducibilita_without_na_sub_df, CTD_without_na_sub_df
 
-def data_piepline(method, data_path="../data", resample=False, **kwargs):
-    Ossigeno_without_na_sub_df, Conducibilita_without_na_sub_df, CTD_without_na_sub_df = read_pipeline(data_path=data_path, resample=resample)
+def data_pipeline(method, data_path="../data", **kwargs):
+    Ossigeno_without_na_sub_df, Conducibilita_without_na_sub_df, CTD_without_na_sub_df = read_pipeline(data_path=data_path, **kwargs)
 
     CTD_Ossigeno_Conducibilita_df = Ossigeno_without_na_sub_df.merge(Conducibilita_without_na_sub_df, how="left", on="Time_rounded", suffixes=("_Ossigeno", "_Conducibilita")).dropna().merge(CTD_without_na_sub_df, on="Time_rounded", how="left", suffixes=("", "_CTD"))
 
@@ -132,3 +132,10 @@ def data_piepline(method, data_path="../data", resample=False, **kwargs):
     CTD_Ossigeno_Conducibilita_df = CTD_Ossigeno_Conducibilita_df[["Time_rounded", "Ossigeno(mg/l)_Ossigeno", "Ossigeno(mg/l)_CTD", "Temperatura(°C)_Ossigeno", "Temperatura(°C)_CTD", "Temperatura(°C)_Conducibilita", "Pressione(db)_Ossigeno", "Pressione(db)_CTD", "Pressione(db)_Conducibilita"]].dropna()
 
     return CTD_Ossigeno_Conducibilita_df
+
+def data_pipeline_split(method, seed, data_path="../data", **kwargs):
+    from sklearn.model_selection import train_test_split
+
+    CTD_Ossigeno_Conducibilita_df = data_pipeline(method=method, data_path=data_path, **kwargs)
+
+    return train_test_split(CTD_Ossigeno_Conducibilita_df, test_size=.2, random_state=seed)

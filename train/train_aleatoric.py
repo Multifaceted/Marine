@@ -7,7 +7,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
 from pathlib import Path
-from util.load_data import data_piepline
+from util.load_data import data_pipeline
 import tensorflow as tf
 import tensorflow_probability as tfp
 import pickle
@@ -31,7 +31,7 @@ save_to = params["save_to"]
 n_epochs = params["n_epochs"]
 seed = params["seed"]
 
-CTD_Ossigeno_Conducibilita_df = data_piepline(method=method, data_path="../data", resample=False, order=order)
+CTD_Ossigeno_Conducibilita_df = data_pipeline(method=method, data_path="../data", resample=False, order=order)
 
 shape, n_vars = CTD_Ossigeno_Conducibilita_df.shape
 

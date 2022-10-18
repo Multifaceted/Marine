@@ -8,7 +8,7 @@ sys.path.insert(0, parentdir)
 
 from functools import partial
 from util.model import init_model_stochastic, init_model_aleatoric
-from util.load_data import data_piepline
+from util.load_data import data_pipeline
 from util.prior_posterior import  posterior_mean_field_with_initializer, prior_trainable_with_initializer
 import tensorflow as tf
 import numpy as np
@@ -41,7 +41,7 @@ load_weights_from = params["load_weights_from"]
 n_epochs = params["n_epochs"]
 seed = params["seed"]
 
-CTD_Ossigeno_Conducibilita_df = data_piepline(method=method, data_path="../data", resample=False, order=order)
+CTD_Ossigeno_Conducibilita_df = data_pipeline(method=method, data_path="../data", resample=False, order=order)
 
 shape, n_vars = CTD_Ossigeno_Conducibilita_df.shape
 
@@ -51,7 +51,7 @@ negloglik = lambda y, rv_y: -rv_y.log_prob(y)
 model_multioutput = init_model_aleatoric(n_vars-2)
 model_multioutput.load_weights(os.path.join(load_weights_from, "weights"))
 weights_initializer = np.concatenate([model_multioutput.weights[-2].numpy().reshape(-1, ), model_multioutput.weights[-1].numpy().reshape(-1, )], axis=0)
-delta = .1
+delta = 1E-3
 stds_initializer = delta * np.abs(weights_initializer)
 
 posterior_mean_field = partial(posterior_mean_field_with_initializer, initializer=tf.keras.initializers.Constant(np.concatenate([weights_initializer, stds_initializer], axis=0)))

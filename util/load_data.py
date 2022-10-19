@@ -106,7 +106,7 @@ def read_pipeline(data_path="data", resample=False, **kwargs):
     ################### Subset DF ###################
     Ossigeno_without_na_sub_df = Ossigeno_without_na_df[["Data", "Ora(UTC)", "Pressione(db)", "Ossigeno(mg/l)", "Temperatura(°C)", "Time"]]
     CTD_without_na_sub_df = CTD_without_na_df[["Data", "Ora(UTC)", "Pressione(db)", "Ossigeno(mg/l)", "Temperatura(°C)", "Time"]]
-    Conducibilita_without_na_sub_df = Conducibilita_without_na_df[["Data", "Ora(UTC)", "Pressione(db)", "Salinita'(PSU)", "Temperatura(°C)", "Time"]]
+    Conducibilita_without_na_sub_df = Conducibilita_without_na_df[["Data", "Ora(UTC)", "Pressione(db)", "Conducibilita'(mS/cm)", "Temperatura(°C)", "Time"]]
 
     ################### Round Time ###################
     Ossigeno_without_na_sub_df["Time_rounded"] = Ossigeno_without_na_sub_df["Time"]
@@ -117,18 +117,25 @@ def read_pipeline(data_path="data", resample=False, **kwargs):
     Conducibilita_without_na_sub_df["Time_rounded"] = Conducibilita_without_na_sub_df["Time_rounded"].apply(lambda x: round_time(x))
 
     Ossigeno_without_na_sub_df.rename({"Ossigeno(mg/l)": "Ossigeno(mg/l)_Ossigeno", "Pressione(db)": "Pressione(db)_Ossigeno", "Temperatura(°C)": "Temperatura(°C)_Ossigeno"}, axis=1, inplace=True)
-    Conducibilita_without_na_sub_df.rename({"Salinita'(PSU)": "Salinita(PSU)_Conducibilita", "Pressione(db)": "Pressione(db)_Conducibilita", "Temperatura(°C)": "Temperatura(°C)_Conducibilita"}, axis=1, inplace=True)
+    Conducibilita_without_na_sub_df.rename({"Conducibilita'(mS/cm)": "Conducibilita'(mS/cm)_Conducibilita", "Pressione(db)": "Pressione(db)_Conducibilita", "Temperatura(°C)": "Temperatura(°C)_Conducibilita"}, axis=1, inplace=True)
     CTD_without_na_sub_df.rename({"Ossigeno(mg/l)": "Ossigeno(mg/l)_CTD", "Pressione(db)": "Pressione(db)_CTD", "Temperatura(°C)": "Temperatura(°C)_CTD"}, axis=1, inplace=True)
     
     return Ossigeno_without_na_sub_df, Conducibilita_without_na_sub_df, CTD_without_na_sub_df
 
-def data_piepline(method, data_path="../data", resample=False, **kwargs):
-    Ossigeno_without_na_sub_df, Conducibilita_without_na_sub_df, CTD_without_na_sub_df = read_pipeline(data_path=data_path, resample=resample)
+def data_pipeline(method, data_path="../data", **kwargs):
+    Ossigeno_without_na_sub_df, Conducibilita_without_na_sub_df, CTD_without_na_sub_df = read_pipeline(data_path=data_path, **kwargs)
 
     CTD_Ossigeno_Conducibilita_df = Ossigeno_without_na_sub_df.merge(Conducibilita_without_na_sub_df, how="left", on="Time_rounded", suffixes=("_Ossigeno", "_Conducibilita")).dropna().merge(CTD_without_na_sub_df, on="Time_rounded", how="left", suffixes=("", "_CTD"))
 
     CTD_Ossigeno_Conducibilita_df = interpolate(CTD_Ossigeno_Conducibilita_df, ["Temperatura(°C)_CTD", "Pressione(db)_CTD", "Ossigeno(mg/l)_CTD"], method=method, **kwargs)
 
-    CTD_Ossigeno_Conducibilita_df = CTD_Ossigeno_Conducibilita_df[["Time_rounded", "Ossigeno(mg/l)_Ossigeno", "Ossigeno(mg/l)_CTD", "Temperatura(°C)_Ossigeno", "Temperatura(°C)_CTD", "Temperatura(°C)_Conducibilita", "Pressione(db)_Ossigeno", "Pressione(db)_CTD", "Pressione(db)_Conducibilita"]].dropna()
+    CTD_Ossigeno_Conducibilita_df = CTD_Ossigeno_Conducibilita_df[["Time_rounded", "Ossigeno(mg/l)_Ossigeno", "Ossigeno(mg/l)_CTD", "Temperatura(°C)_Ossigeno", "Temperatura(°C)_CTD", "Temperatura(°C)_Conducibilita", "Pressione(db)_Ossigeno", "Pressione(db)_CTD", "Pressione(db)_Conducibilita", "Conducibilita'(mS/cm)_Conducibilita"]].dropna()
 
     return CTD_Ossigeno_Conducibilita_df
+
+def data_pipeline_split(method, seed, data_path="../data", **kwargs):
+    from sklearn.model_selection import train_test_split
+
+    CTD_Ossigeno_Conducibilita_df = data_pipeline(method=method, data_path=data_path, **kwargs)
+
+    return train_test_split(CTD_Ossigeno_Conducibilita_df, test_size=.2, random_state=seed)

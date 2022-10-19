@@ -7,7 +7,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
 from pathlib import Path
-from util.load_data import data_pipeline
+from util.load_data import data_pipeline_split
 import tensorflow as tf
 import tensorflow_probability as tfp
 import pickle
@@ -31,11 +31,9 @@ save_to = params["save_to"]
 n_epochs = params["n_epochs"]
 seed = params["seed"]
 
-CTD_Ossigeno_Conducibilita_df = data_pipeline(method=method, data_path="../data", resample=False, order=order)
+CTD_Ossigeno_Conducibilita_train_df, CTD_Ossigeno_Conducibilita_test_df = data_pipeline_split(method=method, seed=0, data_path="../data", resample=False, order=order)
 
-
-
-shape, n_vars = CTD_Ossigeno_Conducibilita_df.shape
+shape, n_vars = CTD_Ossigeno_Conducibilita_train_df.shape
 
 ###################################################################################################################
 Path(save_to).mkdir(parents=True, exist_ok=True)
@@ -54,7 +52,7 @@ model_aleatoric = tf.keras.Sequential([
 
 model_aleatoric.compile(optimizer="Adam", loss="mse", metrics=["mae"])
 tf.keras.utils.set_random_seed(seed)
-history = model_aleatoric.fit(CTD_Ossigeno_Conducibilita_df[["Temperatura(°C)_CTD", "Temperatura(°C)_Conducibilita", "Temperatura(°C)_Ossigeno", "Pressione(db)_CTD", "Pressione(db)_Conducibilita", "Pressione(db)_Ossigeno", "Conducibilita'(mS/cm)_Conducibilita", "Ossigeno(mg/l)_CTD"]], CTD_Ossigeno_Conducibilita_df[["Ossigeno(mg/l)_Ossigeno"]], batch_size=shape, epochs=n_epochs)
+history = model_aleatoric.fit(CTD_Ossigeno_Conducibilita_train_df[["Temperatura(°C)_CTD", "Temperatura(°C)_Conducibilita", "Temperatura(°C)_Ossigeno", "Pressione(db)_CTD", "Pressione(db)_Conducibilita", "Pressione(db)_Ossigeno", "Conducibilita'(mS/cm)_Conducibilita", "Ossigeno(mg/l)_CTD"]], CTD_Ossigeno_Conducibilita_train_df[["Ossigeno(mg/l)_Ossigeno"]], batch_size=shape, epochs=n_epochs)
 model_aleatoric.save_weights(os.path.join(save_to, "weights"))
 
 with open(os.path.join(save_to, "history"), 'wb') as file_pi:

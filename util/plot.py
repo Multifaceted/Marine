@@ -55,7 +55,7 @@ def plot_average(model, df, n_predictions, description=None, save_fig=False, pat
 
     plt.clf()
     plt.figure(figsize=(10, 7), dpi=100)
-    x_tst = df[["Temperatura(°C)_CTD", "Temperatura(°C)_Conducibilita", "Temperatura(°C)_Ossigeno", "Pressione(db)_CTD", "Pressione(db)_Conducibilita", "Pressione(db)_Ossigeno", "Ossigeno(mg/l)_CTD"]].to_numpy()
+    x_tst = df[["Temperatura(°C)_CTD", "Temperatura(°C)_Conducibilita", "Temperatura(°C)_Ossigeno", "Pressione(db)_CTD", "Pressione(db)_Conducibilita", "Pressione(db)_Ossigeno", "Conducibilita'(mS/cm)_Conducibilita", "Ossigeno(mg/l)_CTD"]].to_numpy()
     yhats = [model(x_tst) for _ in range(n_predictions)]
     
     m = np.mean([np.squeeze(yhat.mean()) for yhat in yhats], axis=0)
@@ -67,7 +67,8 @@ def plot_average(model, df, n_predictions, description=None, save_fig=False, pat
     plt.plot(df["Time_rounded"], df["Ossigeno(mg/l)_Ossigeno"], label="True", color="blue")
     plt.legend()
     plt.title("aleatoric uncertainty \naveraged by " + str(n_predictions) + " runs " + description + "\nAvg Loss: " + str(round(loss_avg, 5)))
-   
+    plt.xlabel("Date")
+    plt.ylabel("Oxygen (mg/l)")
     if save_fig:
         plt.savefig(os.path.join(path, "fig.jpg"))
     else:
@@ -76,7 +77,7 @@ def plot_average(model, df, n_predictions, description=None, save_fig=False, pat
     return m, s, loss_avg
 
 ###############################################################################
-method = "polynomial"
+method = "slinear"
 order = 5
 
 CTD_Ossigeno_Conducibilita_train_df, CTD_Ossigeno_Conducibilita_test_df = data_pipeline_split(method=method, seed=0, data_path="../data", resample=False, order=order)
@@ -86,10 +87,32 @@ negloglik = lambda y, rv_y: -rv_y.log_prob(y)
 posterior_mean_field = partial(posterior_mean_field_with_initializer, initializer="zero")
 prior_trainable = partial(prior_trainable_with_initializer, initializer="zero")
 
-path = "/home/3068020/Marine/history/stochastic_seed24_polynomial_traintest"
-model_MF = init_model_stochastic(n_inputs=7, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./2)
+path = "/home/3068020/Marine/history/stochastic_seed24_slinear_traintest"
+model_MF = init_model_stochastic(n_inputs=8, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./2)
 
 model_MF.load_weights(os.path.join(path, "weights"))
 
-m, s, loss_avg = plot_average(model_MF, CTD_Ossigeno_Conducibilita_test_df.sort_values(by=["Time_rounded"]), 10, "without initialization", path=path, save_fig=True)
+m, s, loss_avg = plot_average(model_MF, CTD_Ossigeno_Conducibilita_test_df.sort_values(by=["Time_rounded"]), 500, "without initialization", path=path, save_fig=True)
 # np.mean((CTD_Ossigeno_Conducibilita_df["Ossigeno(mg/l)_Ossigeno"] - m) ** 2)
+
+method = "slinear"
+order = 5
+
+CTD_Ossigeno_Conducibilita_train_df, CTD_Ossigeno_Conducibilita_test_df = data_pipeline_split(method=method, seed=0, data_path="../data", resample=False, order=order)
+
+
+path = "/home/3068020/Marine/history/stochastic_seed24_slinear_initialized_traintest"
+model_MF_initialized = init_model_stochastic(n_inputs=8, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./2)
+
+model_MF_initialized.load_weights(os.path.join(path, "weights"))
+
+m, s, loss_avg = plot_average(model_MF_initialized, CTD_Ossigeno_Conducibilita_test_df.sort_values(by=["Time_rounded"]), 500, "with initialization", path=path, save_fig=True)
+
+#####################################################################################
+
+model_aleatoric = init_model_aleatoric(n_inputs=8)
+
+path2 = "/home/3068020/Marine/history/aleatoric_seed24_slinear_traintest"
+model_aleatoric.load_weights(os.path.join(path2, "weights"))
+
+m, s, loss_avg = plot_average(model_aleatoric, CTD_Ossigeno_Conducibilita_test_df.sort_values(by=["Time_rounded"]), 1, "only aleatoric", path=path2, save_fig=True)

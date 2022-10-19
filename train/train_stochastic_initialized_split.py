@@ -8,7 +8,7 @@ sys.path.insert(0, parentdir)
 
 from functools import partial
 from util.model import init_model_stochastic, init_model_aleatoric
-from util.load_data import data_pipeline
+from util.load_data import data_pipeline_split
 from util.prior_posterior import  posterior_mean_field_with_initializer, prior_trainable_with_initializer
 import tensorflow as tf
 import numpy as np
@@ -41,9 +41,9 @@ load_weights_from = params["load_weights_from"]
 n_epochs = params["n_epochs"]
 seed = params["seed"]
 
-CTD_Ossigeno_Conducibilita_df = data_pipeline(method=method, data_path="../data", resample=False, order=order)
+CTD_Ossigeno_Conducibilita_train_df, CTD_Ossigeno_Conducibilita_test_df = data_pipeline_split(method=method, seed=0, data_path="../data", resample=False, order=order)
 
-shape, n_vars = CTD_Ossigeno_Conducibilita_df.shape
+shape, n_vars = CTD_Ossigeno_Conducibilita_train_df.shape
 
 negloglik = lambda y, rv_y: -rv_y.log_prob(y)
 
@@ -51,7 +51,7 @@ negloglik = lambda y, rv_y: -rv_y.log_prob(y)
 model_multioutput = init_model_aleatoric(n_vars-2)
 model_multioutput.load_weights(os.path.join(load_weights_from, "weights"))
 weights_initializer = np.concatenate([model_multioutput.weights[-2].numpy().reshape(-1, ), model_multioutput.weights[-1].numpy().reshape(-1, )], axis=0)
-delta = 1E-3
+delta = 1E-12
 stds_initializer = delta * np.abs(weights_initializer)
 
 posterior_mean_field = partial(posterior_mean_field_with_initializer, initializer=tf.keras.initializers.Constant(np.concatenate([weights_initializer, stds_initializer], axis=0)))
@@ -63,7 +63,7 @@ Path(save_to).mkdir(parents=True, exist_ok=True)
 model_MF =  init_model_stochastic(n_inputs=n_vars-2, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./shape)
 model_MF.compile(optimizer=tf.optimizers.Adam(learning_rate=0.01), loss=negloglik)
 tf.keras.utils.set_random_seed(seed)
-history = model_MF.fit(CTD_Ossigeno_Conducibilita_df[["Temperatura(°C)_CTD", "Temperatura(°C)_Conducibilita", "Temperatura(°C)_Ossigeno", "Pressione(db)_CTD", "Pressione(db)_Conducibilita", "Pressione(db)_Ossigeno", "Conducibilita'(mS/cm)_Conducibilita", "Ossigeno(mg/l)_CTD"]], CTD_Ossigeno_Conducibilita_df[["Ossigeno(mg/l)_Ossigeno"]], batch_size=shape, epochs=n_epochs)
+history = model_MF.fit(CTD_Ossigeno_Conducibilita_train_df[["Temperatura(°C)_CTD", "Temperatura(°C)_Conducibilita", "Temperatura(°C)_Ossigeno", "Pressione(db)_CTD", "Pressione(db)_Conducibilita", "Pressione(db)_Ossigeno", "Conducibilita'(mS/cm)_Conducibilita", "Ossigeno(mg/l)_CTD"]], CTD_Ossigeno_Conducibilita_train_df[["Ossigeno(mg/l)_Ossigeno"]], batch_size=shape, epochs=n_epochs)
 
 model_MF.save_weights(os.path.join(save_to, "weights"))
 

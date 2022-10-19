@@ -8,7 +8,7 @@ sys.path.insert(0, parentdir)
 
 from functools import partial
 from util.model import init_model_stochastic
-from util.load_data import data_pipeline
+from util.load_data import data_pipeline_split
 from util.prior_posterior import  posterior_mean_field_with_initializer, prior_trainable_with_initializer
 import tensorflow as tf
 import pickle
@@ -35,10 +35,10 @@ save_to = params["save_to"]
 n_epochs = params["n_epochs"]
 seed = params["seed"]
 
-CTD_Ossigeno_Conducibilita_df = data_pipeline(method=method, data_path="../data", resample=False, order=order)
+CTD_Ossigeno_Conducibilita_train_df, CTD_Ossigeno_Conducibilita_test_df = data_pipeline_split(method=method, seed=0, data_path="../data", resample=False, order=order)
 
 
-shape, n_vars = CTD_Ossigeno_Conducibilita_df.shape
+shape, n_vars = CTD_Ossigeno_Conducibilita_train_df.shape
 
 negloglik = lambda y, rv_y: -rv_y.log_prob(y)
 
@@ -49,7 +49,7 @@ prior_trainable = partial(prior_trainable_with_initializer, initializer="zero")
 model_MF = init_model_stochastic(n_inputs=n_vars-2, posterior=posterior_mean_field, prior=prior_trainable, kl_weight=1./shape)
 model_MF.compile(optimizer=tf.optimizers.Adam(learning_rate=0.01), loss=negloglik)
 tf.keras.utils.set_random_seed(seed)
-history = model_MF.fit(CTD_Ossigeno_Conducibilita_df[["Temperatura(°C)_CTD", "Temperatura(°C)_Conducibilita", "Temperatura(°C)_Ossigeno", "Pressione(db)_CTD", "Pressione(db)_Conducibilita", "Pressione(db)_Ossigeno", "Conducibilita'(mS/cm)_Conducibilita", "Ossigeno(mg/l)_CTD"]], CTD_Ossigeno_Conducibilita_df[["Ossigeno(mg/l)_Ossigeno"]], batch_size=shape, epochs=n_epochs)
+history = model_MF.fit(CTD_Ossigeno_Conducibilita_train_df[["Temperatura(°C)_CTD", "Temperatura(°C)_Conducibilita", "Temperatura(°C)_Ossigeno", "Pressione(db)_CTD", "Pressione(db)_Conducibilita", "Pressione(db)_Ossigeno", "Conducibilita'(mS/cm)_Conducibilita", "Ossigeno(mg/l)_CTD"]], CTD_Ossigeno_Conducibilita_train_df[["Ossigeno(mg/l)_Ossigeno"]], batch_size=shape, epochs=n_epochs)
 
 model_MF.save_weights(os.path.join(save_to, "weights"))
 
